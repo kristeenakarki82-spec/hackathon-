@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' http: https: data: blob:; img-src * data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; connect-src 'self' http: https:;" />
+  <title>Dashboard – Pomu AI</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+</head>
+<body data-theme="dark">
+  <header class="topbar ai-topbar">
+    <div class="topbar-left brand">
+      <div class="brand-mark">TP</div>
+      <div class="brand-text">
+        <div class="brand-name">Team Pomu</div>
+        <div class="brand-subtitle">AI Study Companion</div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <nav class="nav-links">
+        <a href="index.html#demo">Demo</a>
+        <a href="index.html#features">Features</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="dashboard.html?mode=panic">Panic Mode</a>
+        <a href="login.html">Login</a>
+      </nav>
+      <button id="dashboard-theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="theme-circle"></span>
+        <span class="theme-label">Light</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="workspace-shell">
+    <aside class="workspace-sidebar" id="workspaceSidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="brand-mark">TP</div>
+          <div>
+            <p class="brand-title">Pomu AI</p>
+            <p class="brand-subtitle">Adaptive study workspace</p>
+          </div>
+        </div>
+        <button id="newSessionBtn" class="button button-secondary sidebar-button" type="button">New Session</button>
+      </div>
+
+      <section class="sidebar-panel sidebar-scroll">
+        <div class="panel-heading">Profile settings</div>
+        <form id="profileForm" class="sidebar-form" autocomplete="off">
+          <label class="field-block">
+            <span>Grade level</span>
+            <select id="gradeLevel" name="gradeLevel">
+              <option value="High school">High school</option>
+              <option value="Middle school">Middle school</option>
+              <option value="College">College</option>
+              <option value="Professional">Professional</option>
+            </select>
+          </label>
+
+          <label class="field-block">
+            <span>Learning goal</span>
+            <select id="learningGoal" name="learningGoal">
+              <option value="Exam prep">Exam prep</option>
+              <option value="Revision">Revision</option>
+              <option value="Concept learning">Concept learning</option>
+              <option value="Quick doubt">Quick doubt</option>
+            </select>
+          </label>
+
+          <label class="field-block">
+            <span>Learning style</span>
+            <select id="learningStyle" name="learningStyle">
+              <option value="Step-by-step">Step-by-step</option>
+              <option value="Visual">Visual</option>
+              <option value="Analogy">Analogy</option>
+              <option value="Exam-ready">Exam-ready</option>
+              <option value="Concise">Concise</option>
+            </select>
+          </label>
+
+          <label class="field-block">
+            <span>Exam soon?</span>
+            <select id="examSoon" name="examSoon">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </label>
+
+          <label class="field-block hidden" id="examDaysField">
+            <span>Days until exam</span>
+            <input id="examDays" name="daysUntilExam" type="number" min="1" placeholder="e.g. 7" />
+          </label>
+
+          <label class="field-block">
+            <span>Struggle areas</span>
+            <input id="struggleAreas" name="struggleAreas" type="text" placeholder="e.g. formulas, reading, problem solving" />
+          </label>
+
+          <label class="field-block">
+            <span>Topic</span>
+            <input id="topic" name="topic" type="text" placeholder="e.g. AI for education" />
+          </label>
+
+          <label class="field-block">
+            <span>Model selector</span>
+            <select id="modelSelector" name="model">
+              <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+              <option value="llama-3.1-70b-versatile">llama-3.1-70b-versatile</option>
+              <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+            </select>
+          </label>
+        </form>
+      </section>
+
+      <section class="sidebar-panel sidebar-scroll">
+        <div class="panel-heading">Recent sessions</div>
+        <div id="sessionList" class="session-list"></div>
+      </section>
+
+      <button id="toggleSidebarBtn" class="sidebar-collapse" type="button">Collapse sidebar</button>
+    </aside>
+
+    <section class="workspace-main">
+      <header class="workspace-header">
+        <div>
+          <p class="workspace-title">Pomu AI</p>
+          <div class="workspace-badge">Powered by Groq</div>
+        </div>
+        <div class="workspace-actions">
+          <button id="exportPdfBtn" class="button button-secondary icon-button" type="button">Export as PDF</button>
+          <button id="theme-toggle" class="button button-secondary icon-button theme-toggle" type="button" aria-label="Toggle theme">
+            <span class="theme-circle"></span>
+            <span class="theme-label">Dark</span>
+          </button>
+          <div class="avatar-placeholder" aria-hidden="true">P</div>
+        </div>
+      </header>
+
+      <main class="chat-panel">
+        <div class="chat-info" id="chatInfo">
+          <div>
+            <p class="chat-session-title" id="sessionTitle">New session</p>
+            <p class="chat-session-meta" id="sessionMeta">Start a conversation to generate your first study plan.</p>
+            <p class="chat-mode" id="chatMode">Mode: Step-by-step · High school</p>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages" aria-live="polite" aria-relevant="additions"></div>
+      </main>
+
+      <footer class="chat-input-bar">
+        <form id="messageForm">
+          <label class="sr-only" for="messageInput">Message input</label>
+          <textarea id="messageInput" rows="1" placeholder="Ask Pomu for a study plan, summary, or exam strategy..."></textarea>
+          <button id="voice-btn" class="voice-btn" type="button" title="Speak to Pomu" aria-label="Speak to Pomu">🎤</button>
+          <div id="speech-controls" class="speech-controls" aria-label="Speech playback controls">
+            <button id="pause-btn" type="button" title="Pause speech" aria-label="Pause speech">⏸</button>
+            <button id="resume-btn" type="button" title="Resume speech" aria-label="Resume speech">▶</button>
+            <button id="stop-btn" type="button" title="Stop speech" aria-label="Stop speech">⏹</button>
+          </div>
+          <button type="submit" class="button button-primary">Send</button>
+        </form>
+      </footer>
+    </section>
+  </div>
+
+  <button id="scrollTopBtn" class="scroll-top-btn" type="button" aria-label="Scroll to top">↑</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js" defer></script>
+</body>
+</html>

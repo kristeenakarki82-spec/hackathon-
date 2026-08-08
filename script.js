@@ -564,12 +564,13 @@ function cleanSessionTitle() {
   renderSessionList();
 }
 
-async function requestAICompletion(userMessageId, conversationContext) {
+async function requestAICompletion(userMessageId, conversationContext, userMessageText = '') {
   if (!currentSession) return;
   const payload = {
     model: currentSession.model || DEFAULT_MODEL,
     profile: currentSession.profile,
     preferences: currentSession.profile,
+    message: userMessageText,
     conversation: conversationContext,
   };
   const response = await fetch('http://localhost:5001/generate', {
@@ -637,7 +638,7 @@ async function sendUserMessage(content) {
   createTypingIndicator();
 
   try {
-    const fullText = await requestAICompletion(userMessage.id, conversation);
+    const fullText = await requestAICompletion(userMessage.id, conversation, userMessage.content);
     removeTypingIndicator();
     const assistantBubble = chatMessagesEl.querySelector(`[data-message-id="${assistantMessage.id}"] .message-text`);
     updateMessageContent(assistantMessage.id, '');
@@ -676,7 +677,7 @@ async function regenerateMessage(assistantId) {
   conversation.push({ role: 'user', content: userMessage.content });
 
   try {
-    const fullText = await requestAICompletion(userMessage.id, conversation);
+    const fullText = await requestAICompletion(userMessage.id, conversation, userMessage.content);
     removeTypingIndicator();
     const assistantBubble = chatMessagesEl.querySelector(`[data-message-id="${assistantId}"] .message-text`);
     updateMessageContent(assistantId, '');

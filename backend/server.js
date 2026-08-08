@@ -123,10 +123,10 @@ app.post('/generate', async (req, res) => {
     } = selectedPreferences;
 
     const safeConversation = sanitizeConversation(conversation);
-    const latestUserMessage = [...safeConversation]
+    const latestUserMessage = String(message || '').trim() || [...safeConversation]
       .reverse()
-      .find((item) => item.role === 'user')?.content || message;
-    const topic = String(latestUserMessage || '').trim();
+      .find((item) => item.role === 'user')?.content || '';
+    const topic = latestUserMessage.trim();
     if (!topic) {
       return res.status(400).json({ error: 'Please enter a study topic or ask Pomu a clear question so it can help you.' });
     }

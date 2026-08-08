@@ -8,47 +8,43 @@
 </head>
 <body data-theme="light">
   <div class="login-shell">
-    <div class="login-card">
+    <form id="loginForm" class="login-card" novalidate>
       <h1>Welcome back.</h1>
       <p class="login-subtitle">Sign in to continue your smarter study routine and keep your Pomu plan on track.</p>
-
-      <form id="login-form" class="login-form" novalidate>
-        <div class="form-group">
-          <label for="email">Email</label>
-          <div class="input-row">
-            <input id="email" name="email" type="email" placeholder="hello@student.com" required />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="password">Password</label>
-          <div class="input-row">
-            <input id="password" name="password" type="password" placeholder="Enter password" required />
-            <button type="button" id="password-toggle" class="password-toggle">Show</button>
-          </div>
-        </div>
-
-        <div class="login-actions">
-          <button type="submit" class="button button-primary login-button">Sign in</button>
-          <a href="index.html">Back home</a>
-        </div>
-
-        <div class="login-status" id="login-status" aria-live="polite"></div>
-
-        <div class="divider-row"><span>or continue with</span></div>
-
-        <div class="alt-login">
-          <button type="button">Continue with Google</button>
-          <button type="button">Continue with Apple</button>
-        </div>
-      </form>
+      <input id="email" type="email" placeholder="Email" required />
+      <input id="password" type="password" placeholder="Password" required />
+      <button type="submit">Sign in</button>
 
       <div class="login-footer">
         <p>“The best way to learn is to start again with a better plan.”</p>
         <p>New here? <a href="index.html">Start your free session</a></p>
       </div>
-    </div>
+    </form>
   </div>
   <script src="script.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const loginForm = document.getElementById('loginForm');
+
+    loginForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      const email = loginForm.querySelector("input[type='email']").value.trim();
+
+      if (!email) {
+        alert('Please enter email');
+        return;
+      }
+
+      const userData = {
+        email,
+        avatar: email.charAt(0).toUpperCase(),
+        loggedIn: true,
+        sessions: [],
+      };
+
+      localStorage.setItem('pomuUser', JSON.stringify(userData));
+      window.location.href = 'dashboard.html';
+    });
+  </script>
 </body>
 </html>

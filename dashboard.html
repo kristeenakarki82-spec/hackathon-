@@ -23,11 +23,13 @@
 
     <div class="topbar-right">
       <nav class="nav-links">
+        <a href="index.html">Home</a>
         <a href="index.html#demo">Demo</a>
         <a href="index.html#features">Features</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="dashboard.html?mode=panic">Panic Mode</a>
         <a href="login.html">Login</a>
+        <a href="#" id="logoutBtn">Logout</a>
       </nav>
       <button id="dashboard-theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">
         <span class="theme-circle"></span>
@@ -73,17 +75,6 @@
           </label>
 
           <label class="field-block">
-            <span>Learning style</span>
-            <select id="learningStyle" name="learningStyle">
-              <option value="Step-by-step">Step-by-step</option>
-              <option value="Visual">Visual</option>
-              <option value="Analogy">Analogy</option>
-              <option value="Exam-ready">Exam-ready</option>
-              <option value="Concise">Concise</option>
-            </select>
-          </label>
-
-          <label class="field-block">
             <span>Exam soon?</span>
             <select id="examSoon" name="examSoon">
               <option value="No">No</option>
@@ -99,11 +90,6 @@
           <label class="field-block">
             <span>Struggle areas</span>
             <input id="struggleAreas" name="struggleAreas" type="text" placeholder="e.g. formulas, reading, problem solving" />
-          </label>
-
-          <label class="field-block">
-            <span>Topic</span>
-            <input id="topic" name="topic" type="text" placeholder="e.g. AI for education" />
           </label>
 
           <label class="field-block">
@@ -131,13 +117,16 @@
           <p class="workspace-title">Pomu AI</p>
           <div class="workspace-badge">Powered by Groq</div>
         </div>
+        <div class="user-info">
+          <div class="avatar" id="userAvatar" aria-hidden="true"></div>
+          <span id="welcomeText"></span>
+        </div>
         <div class="workspace-actions">
           <button id="exportPdfBtn" class="button button-secondary icon-button" type="button">Export as PDF</button>
           <button id="theme-toggle" class="button button-secondary icon-button theme-toggle" type="button" aria-label="Toggle theme">
             <span class="theme-circle"></span>
             <span class="theme-label">Dark</span>
           </button>
-          <div class="avatar-placeholder" aria-hidden="true">P</div>
         </div>
       </header>
 
@@ -172,6 +161,7 @@
   <button id="scrollTopBtn" class="scroll-top-btn" type="button" aria-label="Scroll to top">↑</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="auth.js"></script>
   <script src="script.js" defer></script>
 </body>
 </html>

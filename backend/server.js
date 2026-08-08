@@ -54,7 +54,7 @@ function detectSubject(topic, struggleAreas) {
 }
 
 function buildProfileSummary(profile) {
-  return `Student Profile:\n- Topic: ${profile.topic}\n- Grade level: ${profile.gradeLevel}\n- Learning goal: ${profile.learningGoal}\n- Learning style: ${profile.learningStyle}\n- Struggle areas: ${profile.struggleAreas}\n- Exam soon: ${profile.examSoon}\n- Days until exam: ${profile.daysUntilExam || 'N/A'}\n`;
+  return `Student Profile:\n- Grade level: ${profile.gradeLevel}\n- Learning goal: ${profile.learningGoal}\n- Struggle areas: ${profile.struggleAreas}\n- Exam soon: ${profile.examSoon}\n- Days until exam: ${profile.daysUntilExam || 'N/A'}\n`;
 }
 
 function buildPersonalizationBlock(profile, subject) {
@@ -70,14 +70,6 @@ function buildPersonalizationBlock(profile, subject) {
     'Concept learning': 'Build understanding from first principles and connect new ideas to prior knowledge.',
     'Quick doubt': 'Answer directly first, then add only the context needed to remove the confusion.',
   };
-  const styleGuidance = {
-    Visual: 'Use visual structure, comparisons, diagrams, and tables when they genuinely clarify the concept.',
-    Analogy: 'Use memorable everyday analogies, then clearly map each analogy back to the real concept.',
-    'Exam-ready': 'Lead with what is most likely to matter in an assessment and include a short check for understanding.',
-    Concise: 'Keep the answer focused, compact, and easy to scan.',
-    'Step-by-step': 'Break reasoning into numbered, progressive steps and show the transition between them.',
-  };
-
   const examGuidance = profile.examSoon === 'Yes'
     ? `An exam is soon${profile.daysUntilExam !== 'N/A' ? `, in ${profile.daysUntilExam} day(s)` : ''}; be calm, focused, and confidence-building.`
     : 'There is no immediate exam; optimize for durable understanding and retention.';
@@ -85,14 +77,13 @@ function buildPersonalizationBlock(profile, subject) {
   return [
     gradeGuidance[profile.gradeLevel] || gradeGuidance['High school'],
     goalGuidance[profile.learningGoal] || goalGuidance['Concept learning'],
-    styleGuidance[profile.learningStyle] || styleGuidance['Step-by-step'],
     examGuidance,
     `Subject lens: ${subject}. Struggle areas to address: ${profile.struggleAreas}.`,
   ].map((instruction) => `- ${instruction}`).join('\n');
 }
 
 function buildInstructions(profile) {
-  const subject = detectSubject(profile.topic, profile.struggleAreas);
+  const subject = detectSubject(profile.contextTopic, profile.struggleAreas);
   return `Profile summary:\n${buildProfileSummary(profile)}\nPersonalization directives:\n${buildPersonalizationBlock(profile, subject)}\nGeneral instructions:\n- You are Pomu, an adaptive study coach.\n- Answer as a structured study session with useful Markdown headings and bullets.\n- Include a warm-up, core explanation, worked example, mini quiz, recap, memory tip, or revision suggestion when appropriate.\n- Use a calm, confidence-building tone.\n- Avoid hallucinations, made-up details, or unsupported claims.\n- If the topic is broad, ask the student to narrow it down rather than inventing specifics.\n`;
 }
 
@@ -124,16 +115,18 @@ app.post('/generate', async (req, res) => {
       ...preferences,
     };
     const {
-      topic: profileTopic = '',
       gradeLevel = 'High school',
       learningGoal = 'Exam prep',
-      learningStyle = 'Step-by-step',
       examSoon = 'No',
       daysUntilExam = '',
       struggleAreas = 'core concepts',
     } = selectedPreferences;
 
-    const topic = String(profileTopic || message || '').trim();
+    const safeConversation = sanitizeConversation(conversation);
+    const latestUserMessage = [...safeConversation]
+      .reverse()
+      .find((item) => item.role === 'user')?.content || message;
+    const topic = String(latestUserMessage || '').trim();
     if (!topic) {
       return res.status(400).json({ error: 'Please enter a study topic or ask Pomu a clear question so it can help you.' });
     }
@@ -155,17 +148,15 @@ app.post('/generate', async (req, res) => {
     }
 
     const normalizedProfile = {
-      topic,
+      contextTopic: topic,
       gradeLevel: String(gradeLevel).trim() || 'High school',
       learningGoal: String(learningGoal).trim() || 'Exam prep',
-      learningStyle: String(learningStyle).trim() || 'Step-by-step',
       examSoon: examSoonNormalized ? 'Yes' : 'No',
       daysUntilExam: examSoonNormalized ? String(examDaysNumber) : 'N/A',
       struggleAreas: String(struggleAreas).trim() || 'core concepts',
     };
 
     const profilePrompt = buildInstructions(normalizedProfile);
-    const safeConversation = sanitizeConversation(conversation);
 
     const messages = [
       {

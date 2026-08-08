@@ -54,12 +54,36 @@ const examSoonSelect = document.getElementById('examSoon');
 const examDaysField = document.getElementById('examDaysField');
 const gradeLevelInput = document.getElementById('gradeLevel');
 const learningGoalInput = document.getElementById('learningGoal');
-const learningStyleInput = document.getElementById('learningStyle');
 const struggleAreasInput = document.getElementById('struggleAreas');
-const topicInput = document.getElementById('topic');
 const examDaysInput = document.getElementById('examDays');
 const modelSelector = document.getElementById('modelSelector');
 const workspaceShell = document.querySelector('.workspace-shell');
+const logoutBtn = document.getElementById('logoutBtn');
+const authenticatedUser = (() => {
+  try {
+    return JSON.parse(localStorage.getItem('pomuUser'));
+  } catch {
+    return null;
+  }
+})();
+
+const avatarEl = document.getElementById('userAvatar');
+const welcomeEl = document.getElementById('welcomeText');
+if (authenticatedUser) {
+  if (avatarEl) avatarEl.textContent = authenticatedUser.avatar || authenticatedUser.email?.charAt(0).toUpperCase() || 'P';
+  if (welcomeEl) welcomeEl.textContent = `Welcome back, ${authenticatedUser.email || 'learner'}`;
+}
+
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    document.body.classList.add('fade-out');
+    window.setTimeout(() => {
+      localStorage.removeItem('pomuUser');
+      window.location.href = 'index.html';
+    }, 400);
+  });
+}
 
 let sessions = [];
 let currentSession = null;
@@ -208,11 +232,9 @@ function createNewSession(profile = {}, model = DEFAULT_MODEL) {
     profile: {
       gradeLevel: 'High school',
       learningGoal: 'Exam prep',
-      learningStyle: 'Step-by-step',
       examSoon: 'No',
       daysUntilExam: '',
       struggleAreas: 'core concepts',
-      topic: '',
       ...profile,
     },
     messages: [],
@@ -224,8 +246,8 @@ function updateChatHeader() {
   chatInfoTitle.textContent = currentSession.title || 'New session';
   chatInfoMeta.textContent = `Created ${formatDate(currentSession.createdAt)} · ${currentSession.model}`;
   if (chatModeEl) {
-    const { learningStyle = 'Step-by-step', learningGoal = 'Exam prep', gradeLevel = 'High school' } = currentSession.profile || {};
-    chatModeEl.textContent = `Mode: ${learningStyle} ${learningGoal} (${gradeLevel})`;
+    const { learningGoal = 'Exam prep', gradeLevel = 'High school' } = currentSession.profile || {};
+    chatModeEl.textContent = `Mode: ${learningGoal} (${gradeLevel})`;
   }
 }
 
@@ -233,10 +255,8 @@ function applyProfileToForm(profile) {
   if (!profileForm || !profile) return;
   gradeLevelInput.value = profile.gradeLevel || 'High school';
   learningGoalInput.value = profile.learningGoal || 'Exam prep';
-  learningStyleInput.value = profile.learningStyle || 'Step-by-step';
   examSoonSelect.value = profile.examSoon || 'No';
   struggleAreasInput.value = profile.struggleAreas || '';
-  topicInput.value = profile.topic || '';
   examDaysInput.value = profile.daysUntilExam || '';
   modelSelector.value = profile.model || getStoredModel();
   updateExamDaysVisibility();
@@ -247,11 +267,9 @@ function updateProfileFromForm() {
   currentSession.profile = {
     gradeLevel: gradeLevelInput.value,
     learningGoal: learningGoalInput.value,
-    learningStyle: learningStyleInput.value,
     examSoon: examSoonSelect.value,
     daysUntilExam: examDaysInput.value,
     struggleAreas: struggleAreasInput.value.trim() || 'core concepts',
-    topic: topicInput.value.trim(),
   };
   saveSessions();
 }
@@ -426,6 +444,18 @@ function updateMessageContent(messageId, newContent) {
   message.content = newContent;
   message.status = 'complete';
   saveSessions();
+  if (message.role === 'assistant' && newContent.trim()) {
+    try {
+      const userData = JSON.parse(localStorage.getItem('pomuUser'));
+      if (userData) {
+        userData.sessions = Array.isArray(userData.sessions) ? userData.sessions : [];
+        userData.sessions.push(newContent);
+        localStorage.setItem('pomuUser', JSON.stringify(userData));
+      }
+    } catch {
+      // Ignore malformed demo-auth storage and keep chat rendering alive.
+    }
+  }
   const bubble = chatMessagesEl.querySelector(`[data-message-id="${messageId}"] .message-text`);
   if (bubble) {
     const renderedContent = renderMessageContent(newContent);
@@ -490,8 +520,8 @@ function speakText(text) {
   if (selectedVoice) {
     utterance.voice = selectedVoice;
   }
-  utterance.rate = 1.08;
-  utterance.pitch = 1.03;
+  utterance.rate = 1.12;
+  utterance.pitch = 1.04;
 
   speechSynthesis.speak(utterance);
 }
@@ -683,11 +713,9 @@ function createSessionFromForm() {
   const profile = {
     gradeLevel: gradeLevelInput.value,
     learningGoal: learningGoalInput.value,
-    learningStyle: learningStyleInput.value,
     examSoon: examSoonSelect.value,
     daysUntilExam: examDaysInput.value,
     struggleAreas: struggleAreasInput.value.trim() || 'core concepts',
-    topic: topicInput.value.trim(),
   };
   const model = modelSelector.value || getStoredModel();
   return createNewSession(profile, model);
@@ -698,11 +726,9 @@ function startNewSession() {
   const profile = {
     gradeLevel: gradeLevelInput.value,
     learningGoal: learningGoalInput.value,
-    learningStyle: learningStyleInput.value,
     examSoon: examSoonSelect.value,
     daysUntilExam: examDaysInput.value,
     struggleAreas: struggleAreasInput.value.trim() || 'core concepts',
-    topic: topicInput.value.trim(),
   };
   const newSession = createNewSession(profile, model);
   sessions.push(newSession);
